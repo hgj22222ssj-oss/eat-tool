@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 <title>拒绝外卖，今天吃啥</title>
 <link rel="manifest" href="manifest.json">
-<!-- ========== 新增iOS图标配置，仅此一段新增，其余全部原样保留 ========== -->
+<!-- iOS 图标配置 -->
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="apple-touch-icon-precomposed" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-title" content="拒绝外卖">
@@ -305,6 +305,16 @@ dishList.splice(i,1);
 saveStorage();renderDishList();
 }
 
+//渲染候选列表（带单独换一个按钮）
+function renderPickResult(){
+  document.getElementById("pickResult").innerHTML = currentPickResult.map((item,idx)=>`
+  <div style="display:flex;align-items:center;gap:8px;margin:6px 0">
+    <span>${item.name}</span>
+    <button class="btn-gray" onclick="replaceOne(${idx})" style="padding:3px 6px;font-size:12px">换一个</button>
+  </div>
+  `).join("");
+}
+
 //甄选逻辑
 function startPick(){
 const count=Number(document.getElementById("needCount").value)||1;
@@ -337,8 +347,39 @@ return a;
 }
 const sh=shuffle(pool);
 currentPickResult=sh.slice(0,count);
-document.getElementById("pickResult").innerText=currentPickResult.map(x=>x.name).join("、")
+renderPickResult();
 }
+
+//单独替换一道菜
+function replaceOne(index){
+const filterCat=document.getElementById("cat").value;
+const filterTime=document.getElementById("time").value;
+const filterSpicy=document.getElementById("spicy").value;
+const filterTaste=document.getElementById("taste").value;
+const filterSkill=document.getElementById("skill").value;
+
+let pool=dishList.filter(d=>{
+if(filterCat && !d.tags.includes(filterCat)) return false;
+if(filterTime && !d.tags.includes(filterTime)) return false;
+if(filterSpicy && !d.tags.includes(filterSpicy)) return false;
+if(filterTaste && !d.tags.includes(filterTaste)) return false;
+if(filterSkill){
+const sFlag = filterSkill==="已掌握" ? "✅已掌握":"⏳待学习";
+if(d.skill!==sFlag) return false;
+}
+return true;
+})
+//排除当前已经选中的，避免重复
+pool = pool.filter(d=> !currentPickResult.some(have=>have.name===d.name));
+if(pool.length===0){
+  alert("筛选池里没有其他可选菜品了");
+  return;
+}
+const randomIdx = Math.floor(Math.random()*pool.length);
+currentPickResult[index] = pool[randomIdx];
+renderPickResult();
+}
+
 function confirmEat(){
 if(!currentPickResult.length){alert("请先甄选菜品");return}
 document.getElementById("mealNote").value="吃："+currentPickResult.map(x=>x.name).join("、");
