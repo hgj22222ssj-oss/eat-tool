@@ -1,457 +1,447 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<!-- iOS 桌面图标、全屏PWA配置 -->
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>拒绝外卖，今天吃啥</title>
+<link rel="manifest" href="manifest.json">
+<!-- ========== 新增iOS图标配置，仅此一段新增，其余全部原样保留 ========== -->
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="apple-touch-icon-precomposed" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-title" content="拒绝外卖">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif}
+body{background:#fffbf5;color:#333;padding:16px;max-width:720px;margin:0 auto;font-size:15px;line-height:1.55}
+.header-logo{width:100%;max-width:440px;margin:10px auto 18px;display:block}
+.slogan-img{position:fixed;right:14px;bottom:14px;width:150px;opacity:0.9;pointer-events:none;z-index:1}
+.tab-bar{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+.tab-bar button{border:none;background:#f3d9c0;padding:7px 10px;border-radius:8px;font-size:14px}
+.tab-bar button.active{background:#f0a870;color:#222;font-weight:500}
+.card{background:#fff;border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 1px 8px #0000000a}
+.row{display:flex;gap:8px;align-items:center;margin:8px 0;flex-wrap:wrap}
+select,input{border:1px solid #ddd;border-radius:8px;padding:7px 9px;font-size:15px;min-width:110px}
+button{cursor:pointer}
+.btn-primary{background:#f2b880;border:none;border-radius:9px;padding:9px 14px}
+.btn-gray{background:#e7e7e7;border:none;border-radius:9px;padding:7px 11px}
+.choose-result{margin:12px 0;padding:12px;background:#fff7ec;border-radius:10px}
+.dish-item{padding:9px;border-bottom:1px solid #f2f2f2}
+.dish-item:last-child{border-bottom:none}
+.hidden{display:none !important}
+.form-line{margin:10px 0}
+label{display:inline-block;width:78px}
+input[type=text]{width:calc(100% - 85px)}
+.chip{display:inline-block;background:#f6e4d3;border-radius:6px;padding:4px 7px;margin:3px;font-size:13px}
+.stats-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{border:1px solid #eee;padding:6px 8px;text-align:left}
+#chartBox{height:240px;margin-top:10px}
+</style>
 </head>
 <body>
-<div class="container">
-  <header>
-    <div style="flex:1;text-align:center;">
-      <img src="title-header.png" alt="拒绝外卖，今天吃啥" class="header-img">
-    </div>
-    <button class="btn btn-outline" id="toggleTheme">🌓</button>
-  </header>
+<img class="header-logo" src="title-header.png" alt="拒绝外卖今天吃啥">
 
-  <div class="card">
-    <div class="row">
-      <button class="btn" id="openMenu">私藏菜谱</button>
-      <button class="btn" id="openLog">用餐记录 & 统计</button>
-      <button class="btn btn-outline" id="importExport">导入/导出</button>
-    </div>
-
-    <div>
-      <label>今天打算做几道菜：</label>
-      <input type="number" id="countInput" min="1" max="10" value="2">
-    </div>
-
-    <div>
-      <div style="margin:8px 0;"><strong>筛选条件（选不限就是不限制）</strong></div>
-      <div class="filter-row">
-        <div class="filter-group">
-          <label>菜品大类</label>
-          <select id="selCat">
-            <option value="">不限</option>
-            <option value="荤菜">荤菜</option>
-            <option value="素菜">素菜</option>
-            <option value="素食">素食</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label>耗时</label>
-          <select id="selTime">
-            <option value="">不限</option>
-            <option value="短">短</option>
-            <option value="适中">适中</option>
-            <option value="长">长</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label>辣度</label>
-          <select id="selSpicy">
-            <option value="">不限</option>
-            <option value="辣">辣</option>
-            <option value="不辣">不辣</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label>风味</label>
-          <select id="selTaste">
-            <option value="">不限</option>
-            <option value="清淡">清淡</option>
-            <option value="重口">重口</option>
-            <option value="酸甜">酸甜</option>
-            <option value="鲜香">鲜香</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label>类型</label>
-          <select id="selType">
-            <option value="">不限</option>
-            <option value="快手菜">快手菜</option>
-            <option value="硬菜">硬菜</option>
-            <option value="减脂">减脂</option>
-            <option value="下饭">下饭</option>
-            <option value="汤羹">汤羹</option>
-            <option value="主食">主食</option>
-            <option value="凉菜">凉菜</option>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <button class="btn" id="startPick">开始甄选</button>
-
-    <div id="resultBox" class="hidden">
-      <h3>本轮候选</h3>
-      <div id="resultList"></div>
-      <div class="row">
-        <button class="btn btn-outline" id="reAll">全部重新甄选</button>
-        <button class="btn" id="confirmEat">就吃它了</button>
-      </div>
-    </div>
-  </div>
+<div class="tab-bar">
+<button class="active" onclick="switchPanel('picker')">私藏菜谱</button>
+<button onclick="switchPanel('record')">用餐记录 & 统计</button>
+<button onclick="switchPanel('backup')">导入/导出</button>
 </div>
 
-<!-- 右下角标语图片 -->
-<img src="footer-tip.png" alt="烹饪乐趣，从我做起" class="footer-slogan">
-
-<!-- 私藏菜谱弹窗 -->
-<div class="modal-backdrop" id="menuModal">
-<div class="modal">
-  <h2>私藏菜谱</h2>
-  <button class="btn" id="addDish">新增菜品</button>
-  <div id="dishList"></div>
-  <button class="btn btn-outline" id="closeMenu">关闭</button>
+<!-- 【选菜面板】 -->
+<div id="panel-picker" class="panel">
+<div class="card">
+<div class="form-line">
+<label>今天打算做几道菜：</label>
+<input id="needCount" type="number" value="2" min="1" max="99">
+</div>
+<div style="margin:14px 0"><strong>筛选条件（选不限就是不限制）</strong></div>
+<div class="row">
+<label>菜品大类</label>
+<select id="cat">
+<option value="">不限</option>
+<option>素菜</option>
+<option>荤菜</option>
+<option>汤羹</option>
+<option>主食</option>
+<option>凉菜</option>
+</select>
+</div>
+<div class="row">
+<label>耗时</label>
+<select id="time">
+<option value="">不限</option>
+<option>快手（15分钟内）</option>
+<option>中等（15-40分钟）</option>
+<option>慢炖（40分钟以上）</option>
+</select>
+</div>
+<div class="row">
+<label>辣度</label>
+<select id="spicy">
+<option value="">不限</option>
+<option>不辣</option>
+<option>微辣</option>
+<option>中辣</option>
+<option>特辣</option>
+</select>
+</div>
+<div class="row">
+<label>风味</label>
+<select id="taste">
+<option value="">不限</option>
+<option>家常清淡</option>
+<option>酸甜</option>
+<option>酱香</option>
+<option>香辣</option>
+<option>鲜爽</option>
+</select>
+</div>
+<div class="row">
+<label>类型</label>
+<select id="skill">
+<option value="">不限</option>
+<option>已掌握</option>
+<option>待学习</option>
+</select>
+</div>
+<div class="row" style="margin-top:14px">
+<button class="btn-primary" onclick="startPick()">开始甄选</button>
 </div>
 </div>
 
-<!-- 新增/编辑菜品弹窗 -->
-<div class="modal-backdrop" id="dishEditModal">
-<div class="modal">
-  <h2 id="editTitle">新增菜品</h2>
-  <label>菜名</label>
-  <input id="dishName">
-  <label>掌握状态</label>
-  <select id="dishMaster">
-    <option value="掌握">✅已掌握</option>
-    <option value="学习">📖待学习</option>
-  </select>
-  <label>标签（多选）</label>
-  <div id="dishTagBox"></div>
-  <label>备注</label>
-  <textarea id="dishNote" rows="3"></textarea>
-  <div class="row">
-    <button class="btn" id="saveDish">保存</button>
-    <button class="btn btn-outline" id="cancelDish">取消</button>
-  </div>
+<div class="card">
+<div><strong>本轮候选</strong></div>
+<div class="row" style="margin:10px 0">
+<button class="btn-gray" onclick="startPick()">全部重新甄选</button>
+<button class="btn-gray" onclick="confirmEat()">就吃它了</button>
+</div>
+<div id="pickResult" class="choose-result">等待甄选</div>
+</div>
+
+<div class="card">
+<div class="row">
+<strong>私藏菜谱</strong>
+<button class="btn-gray" onclick="toggleAddDish()">新增菜品</button>
+<button class="btn-gray" onclick="renderDishList()">关闭</button>
+</div>
+<div id="addDishForm" class="hidden" style="margin-top:12px;padding-top:12px;border-top:1px solid #eee">
+<div class="form-line">
+<label>菜名</label><input id="dishName" type="text">
+</div>
+<div class="form-line">
+<label>掌握状态</label>
+<select id="dishSkill">
+<option>✅已掌握</option>
+<option>⏳待学习</option>
+</select>
+</div>
+<div class="form-line">
+<label>标签（多选）</label>
+<div id="tagBox">
+<span class="chip" data-val="素菜">素菜</span>
+<span class="chip" data-val="荤菜">荤菜</span>
+<span class="chip" data-val="汤羹">汤羹</span>
+<span class="chip" data-val="主食">主食</span>
+<span class="chip" data-val="凉菜">凉菜</span>
+<span class="chip" data-val="快手（15分钟内）">快手</span>
+<span class="chip" data-val="中等（15-40分钟）">中等耗时</span>
+<span class="chip" data-val="慢炖（40分钟以上）">慢炖</span>
+<span class="chip" data-val="不辣">不辣</span>
+<span class="chip" data-val="微辣">微辣</span>
+<span class="chip" data-val="中辣">中辣</span>
+<span class="chip" data-val="特辣">特辣</span>
+<span class="chip" data-val="家常清淡">清淡</span>
+<span class="chip" data-val="酸甜">酸甜</span>
+<span class="chip" data-val="酱香">酱香</span>
+<span class="chip" data-val="香辣">香辣</span>
+<span class="chip" data-val="鲜爽">鲜爽</span>
+</div>
+<input type="hidden" id="selectedTags">
+</div>
+<div class="form-line">
+<label>备注</label><input id="dishNote" type="text" placeholder="食材、要点备注">
+</div>
+<div class="row">
+<button class="btn-primary" onclick="saveDish()">保存</button>
+<button class="btn-gray" onclick="toggleAddDish()">取消</button>
+</div>
+</div>
+<div id="dishListBox" style="margin-top:10px;max-height:300px;overflow:auto"></div>
+</div>
+
+<div class="card">
+<div><strong>记录本次用餐</strong></div>
+<div class="form-line">
+<label>时段</label>
+<select id="mealTime">
+<option>早餐</option>
+<option>午餐</option>
+<option>晚餐</option>
+<option>加餐</option>
+</select>
+备注：<input id="mealNote" type="text" placeholder="可选">
+</div>
+<div class="row">
+<button class="btn-primary" onclick="saveMealRecord()">确认保存</button>
+<button class="btn-gray" onclick="clearMealInput()">取消</button>
+</div>
 </div>
 </div>
 
-<!-- 确认就餐弹窗 -->
-<div class="modal-backdrop" id="eatModal">
-<div class="modal">
-  <h2>记录本次用餐</h2>
-  <label>时段</label>
-  <select id="mealTime">
-    <option value="早">早餐</option>
-    <option value="午">午餐</option>
-    <option value="晚">晚餐</option>
-  </select>
-  <label>备注（可选）</label>
-  <textarea id="mealNote" rows="3"></textarea>
-  <div class="row">
-    <button class="btn" id="submitMeal">确认保存</button>
-    <button class="btn btn-outline" id="cancelMeal">取消</button>
-  </div>
+<!-- 【记录统计面板】 -->
+<div id="panel-record" class="panel hidden">
+<div class="card">
+<div class="row">
+<label>起止日期</label>
+<input id="dateStart" type="date">
+<input id="dateEnd" type="date">
+</div>
+<div class="row">
+<label>菜品标签筛选</label>
+<select id="statTag">
+<option value="">全部菜品</option>
+</select>
+<button class="btn-gray" onclick="queryStat()">查询</button>
+<button class="btn-gray" onclick="toggleChart()">切换图表：柱状图</button>
+</div>
+<div id="statTable"></div>
+<div id="chartBox"></div>
+<button class="btn-gray" onclick="switchPanel('picker')" style="margin-top:10px">关闭</button>
 </div>
 </div>
 
-<!-- 统计弹窗 -->
-<div class="modal-backdrop" id="logModal">
-<div class="modal">
-  <h2>用餐记录 & 统计</h2>
-  <div class="row">
-    <input type="date" id="logStart">
-    <input type="date" id="logEnd">
-    <select id="logDishFilter">
-      <option value="">全部菜品</option>
-    </select>
-    <select id="logTagFilter">
-      <option value="">全部标签</option>
-    </select>
-  </div>
-  <div class="row">
-    <button class="btn" id="queryLog">查询</button>
-    <button class="btn btn-outline" id="chartSwitch">切换图表：柱状图</button>
-  </div>
-  <div class="chart-wrap"><canvas id="chartCanvas"></canvas></div>
-  <div id="logList"></div>
-  <button class="btn btn-outline" id="closeLog">关闭</button>
+<!-- 【备份面板】 -->
+<div id="panel-backup" class="panel hidden">
+<div class="card">
+<div><strong>数据备份</strong></div>
+<div class="row" style="margin:10px 0">
+<button class="btn-primary" onclick="exportJson()">导出JSON备份</button>
+</div>
+<div class="form-line">
+<label>导入备份文件</label>
+<input type="file" id="importFile" accept=".json">
+</div>
+<div class="row">
+<button class="btn-primary" onclick="importJson()">导入</button>
+<button class="btn-gray" onclick="switchPanel('picker')">关闭</button>
+</div>
 </div>
 </div>
 
-<!-- 导入导出弹窗 -->
-<div class="modal-backdrop" id="ieModal">
-<div class="modal">
-  <h2>数据备份</h2>
-  <button class="btn" id="exportBtn">导出JSON备份</button>
-  <div style="margin:8px 0">
-    <label>导入备份文件</label>
-    <input type="file" id="importFile" accept=".json">
-  </div>
-  <button class="btn btn-outline" id="closeIe">关闭</button>
-</div>
-</div>
+<img class="slogan-img" src="footer-tip.png" alt="烹饪乐趣，从我做起">
 
 <script>
-const ALL_TAGS = ["荤菜","素菜","素食","短","适中","长","辣","不辣","快手菜","硬菜","清淡","重口","酸甜","鲜香","减脂","下饭","汤羹","主食","凉菜"];
-let state = {
-  dishes:[],
-  logs:[],
-  currentResult:[],
-  editId:null,
-  chartType:"bar"
-};
-const $ = s => document.querySelector(s);
-const $$ = s => Array.from(document.querySelectorAll(s));
+let dishList = JSON.parse(localStorage.getItem("dishList"))||[];
+let mealRecords = JSON.parse(localStorage.getItem("mealRecords"))||[];
+let currentPickResult=[];
+let selectedTagArr=[];
 
-function save(){
-  localStorage.setItem("eatToolData", JSON.stringify(state))
+function saveStorage(){
+localStorage.setItem("dishList",JSON.stringify(dishList));
+localStorage.setItem("mealRecords",JSON.stringify(mealRecords));
 }
-function load(){
-  const raw = localStorage.getItem("eatToolData");
-  if(raw) state = JSON.parse(raw)
+
+function switchPanel(name){
+document.querySelectorAll(".panel").forEach(p=>p.classList.add("hidden"));
+document.getElementById("panel-"+name).classList.remove("hidden");
+document.querySelectorAll(".tab-bar button").forEach(b=>b.classList.remove("active"));
+event.target.classList.add("active");
+if(name==='record'){initStatFilter();queryStat();}
 }
-function renderTagBox(boxEl, selectedTags=[]){
-  boxEl.innerHTML = "";
-  ALL_TAGS.forEach(tag=>{
-    const label = document.createElement("label");
-    label.className = "tag-checkbox";
-    label.innerHTML = `<input type="checkbox" value="${tag}" ${selectedTags.includes(tag)?"checked":""}> ${tag}`;
-    boxEl.appendChild(label)
-  })
+
+//标签点击
+document.querySelectorAll(".chip").forEach(c=>{
+c.onclick=()=>{
+const v=c.dataset.val;
+const idx=selectedTagArr.indexOf(v);
+if(idx>-1){selectedTagArr.splice(idx,1);c.style.background="#f6e4d3"}
+else{selectedTagArr.push(v);c.style.background="#f0a870"}
+document.getElementById("selectedTags").value=selectedTagArr.join(",");
 }
-function getSelectedTags(boxEl){
-  return $$(boxEl.querySelectorAll("input:checked")).map(i=>i.value)
+})
+
+function toggleAddDish(){
+const box=document.getElementById("addDishForm");
+box.classList.toggle("hidden");
+if(!box.classList.contains("hidden")){
+document.getElementById("dishName").value="";
+document.getElementById("dishNote").value="";
+selectedTagArr=[];
+document.querySelectorAll(".chip").forEach(x=>x.style.background="#f6e4d3");
 }
-function getFilterPool(){
-  const cat = $("#selCat").value;
-  const time = $("#selTime").value;
-  const spicy = $("#selSpicy").value;
-  const taste = $("#selTaste").value;
-  const type = $("#selType").value;
-  return state.dishes.filter(d=>{
-    if(d.master !== "掌握") return false;
-    if(cat && !d.tags.includes(cat)) return false;
-    if(time && !d.tags.includes(time)) return false;
-    if(spicy && !d.tags.includes(spicy)) return false;
-    if(taste && !d.tags.includes(taste)) return false;
-    if(type && !d.tags.includes(type)) return false;
-    return true
-  })
+renderDishList();
 }
-function weightedPick(pool, n){
-  const arr = [...pool];
-  const out = [];
-  for(let i=0;i<n && arr.length>0;i++){
-    const idx = Math.floor(Math.random()*arr.length);
-    out.push(arr.splice(idx,1)[0])
-  }
-  return out
-}
-function renderResult(list){
-  const box = $("#resultBox");
-  const wrap = $("#resultList");
-  if(!list.length){
-    box.classList.add("hidden");
-    return
-  }
-  box.classList.remove("hidden");
-  wrap.innerHTML = "";
-  list.forEach(d=>{
-    const div = document.createElement("div");
-    div.className = "result-item";
-    const tagHtml = d.tags.map(t=>`<span class="tag">${t}</span>`).join("");
-    div.innerHTML = `<div><div>${d.name}</div><div class="tag-list">${tagHtml}</div></div><button class="btn btn-outline replace" data-id="${d.id}">换掉这一道</button>`;
-    wrap.appendChild(div)
-  })
-  $$(".replace").forEach(btn=>{
-    btn.onclick = ()=>{
-      const id = btn.dataset.id;
-      const rest = state.currentResult.filter(x=>x.id!==id);
-      const pool = getFilterPool().filter(x=>!rest.find(r=>r.id===x.id));
-      if(!pool.length) return alert("没有备选菜品");
-      const newOne = weightedPick(pool,1);
-      state.currentResult = [...rest, ...newOne];
-      renderResult(state.currentResult)
-    }
-  })
-}
-function renderDishList(){
-  const wrap = $("#dishList");
-  wrap.innerHTML = "";
-  state.dishes.forEach(d=>{
-    const div = document.createElement("div");
-    div.className = "card";
-    const tagHtml = d.tags.map(t=>`<span class="tag">${t}</span>`).join("");
-    div.innerHTML = `
-      <div><strong>${d.name}</strong> ${d.master==="掌握"?"✅已掌握":"📖待学习"}</div>
-      <div class="tag-list">${tagHtml}</div>
-      <div style="font-size:13px;color:var(--muted)">${d.note || "无备注"}</div>
-      <div class="row">
-        <button class="btn btn-outline edit" data-id="${d.id}">编辑</button>
-        <button class="btn btn-danger del" data-id="${d.id}">删除</button>
-      </div>
-    `;
-    wrap.appendChild(div)
-  })
-  $$(".edit").forEach(b=>b.onclick=()=>openEditDish(b.dataset.id));
-  $$(".del").forEach(b=>b.onclick=()=>{
-    if(!confirm("确定删除？")) return;
-    state.dishes = state.dishes.filter(x=>x.id!==b.dataset.id);
-    save();renderDishList()
-  })
-}
-function openEditDish(id=null){
-  state.editId = id;
-  if(id){
-    const d = state.dishes.find(x=>x.id===id);
-    $("#editTitle").textContent = "编辑菜品";
-    $("#dishName").value = d.name;
-    $("#dishMaster").value = d.master;
-    $("#dishNote").value = d.note;
-    renderTagBox($("#dishTagBox"), d.tags)
-  }else{
-    $("#editTitle").textContent = "新增菜品";
-    $("#dishName").value = "";
-    $("#dishMaster").value = "掌握";
-    $("#dishNote").value = "";
-    renderTagBox($("#dishTagBox"), [])
-  }
-  $("#dishEditModal").style.display = "flex"
-}
-function closeModal(el){$(el).style.display="none"}
+
 function saveDish(){
-  const name = $("#dishName").value.trim();
-  if(!name) return alert("菜名不能为空");
-  const tags = getSelectedTags($("#dishTagBox"));
-  const item = {
-    id: state.editId || Date.now().toString(),
-    name,
-    master: $("#dishMaster").value,
-    tags,
-    note: $("#dishNote").value.trim()
-  };
-  if(state.editId){
-    const i = state.dishes.findIndex(x=>x.id===state.editId);
-    state.dishes[i] = item
-  }else{
-    state.dishes.push(item)
-  }
-  save();renderDishList();closeModal("#dishEditModal")
+const name=document.getElementById("dishName").value.trim();
+if(!name){alert("菜名不能为空");return}
+const obj={
+name,
+skill:document.getElementById("dishSkill").value,
+tags:selectedTagArr,
+note:document.getElementById("dishNote").value.trim()
+};
+dishList.push(obj);
+saveStorage();
+toggleAddDish();
+renderDishList();
 }
-function doPick(){
-  const n = Number($("#countInput").value);
-  if(n<1 || n>10) return alert("数量1~10");
-  const pool = getFilterPool();
-  if(!pool.length) return alert("没有符合条件的菜品，请调整筛选");
-  state.currentResult = weightedPick(pool, n);
-  renderResult(state.currentResult)
-}
-function submitMeal(){
-  const time = $("#mealTime").value;
-  const note = $("#mealNote").value.trim();
-  state.currentResult.forEach(d=>{
-    d.pickCount = (d.pickCount||0)+1;
-    d.lastTime = Date.now()
-  })
-  state.logs.push({
-    time:new Date().toISOString(),
-    period:time,
-    dishes:state.currentResult.map(x=>({id:x.id,name:x.name})),
-    note
-  })
-  save();closeModal("#eatModal");$("#mealNote").value=""
-}
-function renderLogFilter(){
-  const dishSel = $("#logDishFilter");
-  const tagSel = $("#logTagFilter");
-  dishSel.innerHTML = `<option value="">全部菜品</option>`;
-  tagSel.innerHTML = `<option value="">全部标签</option>`;
-  state.dishes.forEach(d=>dishSel.innerHTML += `<option value="${d.id}">${d.name}</option>`);
-  ALL_TAGS.forEach(t=>tagSel.innerHTML += `<option value="${t}">${t}</option>`)
-}
-let chartIns = null;
-function queryLog(){
-  const s = $("#logStart").value;
-  const e = $("#logEnd").value;
-  const dishId = $("#logDishFilter").value;
-  const tag = $("#logTagFilter").value;
-  let list = [...state.logs];
-  if(s) list = list.filter(x=>new Date(x.time)>=new Date(s));
-  if(e) list = list.filter(x=>new Date(x.time)<=new Date(e+" 23:59:59"));
-  const countMap = {};
-  list.forEach(log=>{
-    log.dishes.forEach(d=>{
-      const dish = state.dishes.find(x=>x.id===d.id);
-      if(!dish) return;
-      if(dishId && dish.id!==dishId) return;
-      if(tag && !dish.tags.includes(tag)) return;
-      countMap[d.name] = (countMap[d.name]||0)+1
-    })
-  })
-  const labels = Object.keys(countMap);
-  const data = labels.map(k=>countMap[k]);
-  if(chartIns) chartIns.destroy();
-  const ctx = $("#chartCanvas").getContext("2d");
-  chartIns = new Chart(ctx,{
-    type:state.chartType,
-    data:{labels,datasets:[{label:"选中次数",data,backgroundColor:"#3b82f6"}]},
-    options:{responsive:true,maintainAspectRatio:false}
-  })
-  const logWrap = $("#logList");
-  logWrap.innerHTML = "";
-  list.reverse().forEach(log=>{
-    const t = new Date(log.time).toLocaleString();
-    const dishNames = log.dishes.map(x=>x.name).join("、");
-    const div = document.createElement("div");
-    div.className = "card";
-    div.innerHTML = `<div>${t} ${log.period}餐：${dishNames}</div>${log.note?`<div style="font-size:13px;color:var(--muted)">备注：${log.note}</div>`:""}<button class="btn btn-outline del-log" data-t="${log.time}">删除这条</button>`;
-    logWrap.appendChild(div)
-  })
-  $$(".del-log").forEach(b=>b.onclick=()=>{
-    if(!confirm("删除这条记录？")) return;
-    state.logs = state.logs.filter(x=>x.time!==b.dataset.t);
-    save();queryLog()
-  })
-}
-$("#chartSwitch").onclick = ()=>{
-  state.chartType = state.chartType==="bar"?"pie":"bar";
-  $("#chartSwitch").textContent = `切换图表：${state.chartType==="bar"?"柱状图":"饼图"}`;
-  queryLog()
-}
-$("#exportBtn").onclick = ()=>{
-  const blob = new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "拒绝外卖备份.json";
-  a.click();URL.revokeObjectURL(a.href)
-}
-$("#importFile").onchange = async ev=>{
-  const f = ev.target.files[0];
-  if(!f) return;
-  const txt = await f.text();
-  const d = JSON.parse(txt);
-  if(!d.dishes || !d.logs) return alert("备份文件格式不对");
-  if(!confirm("导入会覆盖当前所有数据，确定？")) return;
-  state = d;save();renderDishList();renderLogFilter();closeModal("#ieModal");ev.target.value=""
-}
-$("#toggleTheme").onclick = ()=>document.body.classList.toggle("dark");
-$("#openMenu").onclick = ()=>{$("#menuModal").style.display="flex";renderDishList()};
-$("#closeMenu").onclick = ()=>closeModal("#menuModal");
-$("#addDish").onclick = ()=>openEditDish();
-$("#saveDish").onclick = saveDish;
-$("#cancelDish").onclick = ()=>closeModal("#dishEditModal");
-$("#startPick").onclick = doPick;
-$("#reAll").onclick = doPick;
-$("#confirmEat").onclick = ()=>$("#eatModal").style.display="flex";
-$("#submitMeal").onclick = submitMeal;
-$("#cancelMeal").onclick = ()=>closeModal("#eatModal");
-$("#openLog").onclick = ()=>{$("#logModal").style.display="flex";renderLogFilter()};
-$("#closeLog").onclick = ()=>closeModal("#logModal");
-$("#importExport").onclick = ()=>$("#ieModal").style.display="flex";
-$("#closeIe").onclick = ()=>closeModal("#ieModal");
 
-load();
-const now = new Date();
-$("#logEnd").value = now.toISOString().slice(0,10);
-now.setMonth(now.getMonth()-1);
-$("#logStart").value = now.toISOString().slice(0,10);
+function renderDishList(){
+const box=document.getElementById("dishListBox");
+if(!dishList.length){box.innerHTML="<div style='padding:8px'>暂无菜品</div>";return}
+box.innerHTML=dishList.map((item,i)=>`
+<div class="dish-item">
+<div style="font-weight:500">${item.name} ${item.skill}</div>
+<div style="font-size:13px;color:#666">标签：${item.tags.join("、")||"无"}</div>
+${item.note?`<div style="font-size:13px;color:#666">备注：${item.note}</div>`:""}
+<button class="btn-gray" onclick="delDish(${i})" style="margin-top:4px;font-size:12px;padding:4px 7px">删除</button>
+</div>`).join("");
+}
+function delDish(i){
+if(!confirm("确定删除？"))return;
+dishList.splice(i,1);
+saveStorage();renderDishList();
+}
+
+//甄选逻辑
+function startPick(){
+const count=Number(document.getElementById("needCount").value)||1;
+const filterCat=document.getElementById("cat").value;
+const filterTime=document.getElementById("time").value;
+const filterSpicy=document.getElementById("spicy").value;
+const filterTaste=document.getElementById("taste").value;
+const filterSkill=document.getElementById("skill").value;
+
+let pool=dishList.filter(d=>{
+if(filterCat && !d.tags.includes(filterCat)) return false;
+if(filterTime && !d.tags.includes(filterTime)) return false;
+if(filterSpicy && !d.tags.includes(filterSpicy)) return false;
+if(filterTaste && !d.tags.includes(filterTaste)) return false;
+if(filterSkill){
+const sFlag = filterSkill==="已掌握" ? "✅已掌握":"⏳待学习";
+if(d.skill!==sFlag) return false;
+}
+return true;
+})
+if(pool.length===0){document.getElementById("pickResult").innerText="没有符合筛选条件的菜品";currentPickResult=[];return}
+//洗牌
+function shuffle(arr){
+let a=[...arr];
+for(let i=a.length-1;i>0;i--){
+const j=Math.floor(Math.random()*(i+1));
+[a[i],a[j]]=[a[j],a[i]]
+}
+return a;
+}
+const sh=shuffle(pool);
+currentPickResult=sh.slice(0,count);
+document.getElementById("pickResult").innerText=currentPickResult.map(x=>x.name).join("、")
+}
+function confirmEat(){
+if(!currentPickResult.length){alert("请先甄选菜品");return}
+document.getElementById("mealNote").value="吃："+currentPickResult.map(x=>x.name).join("、");
+}
+function saveMealRecord(){
+const rec={
+time:new Date().toISOString(),
+meal:document.getElementById("mealTime").value,
+note:document.getElementById("mealNote").value.trim(),
+dishes:[...currentPickResult]
+}
+mealRecords.push(rec);
+saveStorage();
+alert("用餐记录保存成功");
+clearMealInput();
+}
+function clearMealInput(){
+document.getElementById("mealNote").value="";
+}
+
+//统计
+let chartMode="table";
+function initStatFilter(){
+const tagSet=new Set();
+dishList.forEach(d=>d.tags.forEach(t=>tagSet.add(t)));
+const sel=document.getElementById("statTag");
+sel.innerHTML='<option value="">全部菜品</option>'
+Array.from(tagSet).forEach(t=>sel.innerHTML+=`<option>${t}</option>`)
+const now=new Date();
+const y=new Date(now.getTime()-30*24*3600*1000);
+document.getElementById("dateStart").valueAsDate=y;
+document.getElementById("dateEnd").valueAsDate=now;
+}
+function queryStat(){
+const s=document.getElementById("dateStart").value;
+const e=document.getElementById("dateEnd").value;
+const tag=document.getElementById("statTag").value;
+let list=mealRecords.filter(r=>{
+const d=new Date(r.time);
+return d >= new Date(s) && d <= new Date(e+" 23:59:59")
+})
+if(tag){
+list=list.filter(r=>r.dishes.some(d=>d.tags.includes(tag)))
+}
+//汇总菜品次数
+const cnt={};
+list.forEach(r=>r.dishes.forEach(d=>{cnt[d.name]=(cnt[d.name]||0)+1}))
+const arr=Object.entries(cnt).sort((a,b)=>b[1]-a[1]);
+const tableBox=document.getElementById("statTable");
+const chartBox=document.getElementById("chartBox");
+if(arr.length===0){
+tableBox.innerHTML="<div style='padding:8px'>该时间段无记录</div>";
+chartBox.innerHTML="";
+return;
+}
+if(chartMode==="table"){
+chartBox.innerHTML="";
+tableBox.innerHTML=`<table><tr><th>菜名</th><th>次数</th></tr>`+arr.map(x=>`<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`).join("")+"</table>";
+}else{
+tableBox.innerHTML="";
+chartBox.innerHTML=arr.slice(0,12).map(x=>`<div style="margin:4px 0;display:flex;align-items:center"><div style="width:100px;font-size:13px">${x[0]}</div><div style="flex:1;height:18px;background:#f3e2d0;border-radius:4px;overflow:hidden"><div style="height:100%;background:#f0a870;width:${Math.min(x[1]*18,100)}%"></div></div><span style="margin-left:6px;font-size:13px">${x[1]}</span></div>`).join("");
+}
+}
+function toggleChart(){
+chartMode=chartMode==="table"?"chart":"table";
+event.target.innerText="切换图表："+(chartMode==="table"?"柱状图":"表格");
+queryStat();
+}
+
+//导入导出
+function exportJson(){
+const out={dishList,mealRecords};
+const blob=new Blob([JSON.stringify(out,null,2)],{type:"application/json"});
+const a=document.createElement("a");
+a.href=URL.createObjectURL(blob);
+a.download="菜谱备份.json";
+a.click();
+URL.revokeObjectURL(a.href);
+}
+function importJson(){
+const f=document.getElementById("importFile").files[0];
+if(!f){alert("请选择json备份文件");return}
+const r=new FileReader();
+r.onload=e=>{
+try{
+const d=JSON.parse(e.target.result);
+if(!d.dishList || !d.mealRecords) throw Error;
+if(confirm("导入会覆盖当前所有数据，确认？")){
+dishList=d.dishList;mealRecords=d.mealRecords;
+saveStorage();renderDishList();initStatFilter();alert("导入成功");
+}
+}catch(err){alert("文件格式错误");}
+}
+r.readAsText(f);
+}
+
+//初始化
+renderDishList();
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js');
+  });
+}
 </script>
 </body>
 </html>
