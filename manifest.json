@@ -1,0 +1,21 @@
+{
+  "name": "拒绝外卖，今天吃啥",
+  "short_name": "拒绝外卖",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "description": "帮你随机挑选家里要做的菜，拒绝外卖",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
